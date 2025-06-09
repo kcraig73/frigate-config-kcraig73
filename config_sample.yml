@@ -1,0 +1,141 @@
+###############################################################
+#                      MQTT CONFIGURATION                     #
+###############################################################
+mqtt:
+  enabled: true
+  host: MQTT_BROKER_IP
+  port: 1883
+  topic_prefix: frigite
+  client_id: frigite
+  user: YOUR_MQTT_USER
+  password: YOUR_MQTT_PASSWORD
+
+###############################################################
+#                    OBJECT DETECTION CONFIG                  #
+###############################################################
+detectors:
+  coral1:
+    type: edgetpu
+    device: pci:0
+  coral2:
+    type: edgetpu
+    device: pci:1
+
+###############################################################
+#                        GO2RTC STREAMS                       #
+###############################################################
+go2rtc:
+  streams:
+    # Axis Cameras (Outdoor)
+    frontyard_det: rtsp://user:pass@CAMERA_IP/low_res
+    frontyard_rec: rtsp://user:pass@CAMERA_IP/full_res
+    backyard_det: rtsp://user:pass@CAMERA_IP/low_res
+    backyard_rec: rtsp://user:pass@CAMERA_IP/full_res
+
+    # Sercomm Camera (Patio)
+    patio_det: rtsp://user:pass@CAMERA_IP:554/stream2
+    patio_rec: rtsp://user:pass@CAMERA_IP:554/stream1
+
+    # Unifi Cameras (Indoor and Front Door)
+    child1_det: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_A
+    child1_rec: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_B
+    child2_det: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_C
+    child2_rec: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_D
+    familyroom_det: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_E
+    familyroom_rec: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_F
+    frontdoor_det: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_G
+    frontdoor_rec: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_H
+    livingroom_det: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_I
+    livingroom_rec: rtsp://UNIFI_NVR_IP:7447/STREAM_TOKEN_J
+
+###############################################################
+#                         CAMERA SETUP                        #
+###############################################################
+cameras:
+  # Outdoor Cameras
+  frontdoor:
+    ffmpeg:
+      inputs:
+        - path: rtsp://localhost:8554/frontdoor_rec
+          roles: [record]
+          input_args: preset-record-gpu
+        - path: rtsp://localhost:8554/frontdoor_det
+          roles: [detect]
+          input_args: preset-det-gpu
+      hwaccel_args: preset-vaapi-nvidia
+    detect:
+      enabled: true
+    motion:
+      threshold: 50
+      contour_area: 20
+      improve_contrast: true
+
+  # Additional cameras omitted for brevity in this sample
+
+###############################################################
+#                         RECORDING                           #
+###############################################################
+record:
+  enabled: true
+  retain:
+    days: 5
+
+###############################################################
+#                     DETECTION TUNING                        #
+###############################################################
+detect:
+  max_disappeared: 25
+
+###############################################################
+#                          SNAPSHOTS                          #
+###############################################################
+snapshots:
+  enabled: true
+  timestamp: false
+  bounding_box: true
+  retain:
+    default: 2
+
+###############################################################
+#                           BIRDSEYE                          #
+###############################################################
+birdseye:
+  enabled: true
+  mode: objects
+
+###############################################################
+#                        CAMERA GROUPS                        #
+###############################################################
+camera_groups:
+  Birdseye:
+    order: 1
+    icon: LuBird
+    cameras: birdseye
+
+  Children:
+    order: 2
+    icon: LuBedDouble
+    cameras:
+      - child1
+      - child2
+
+  Outside:
+    order: 3
+    icon: LuTreePine
+    cameras:
+      - frontdoor
+      - frontyard
+      - backyard
+      - patio
+
+  First_Floor:
+    order: 4
+    icon: LuArmchair
+    cameras:
+      - familyroom
+      - livingroom
+
+###############################################################
+#                           VERSION                           #
+###############################################################
+version: 0.15-1
